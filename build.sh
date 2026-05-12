@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Build PPT Remote and assemble a runnable .app bundle in dist/.
+# Build PPT Remote and assemble a runnable .app bundle in dist/.# Set the env variable $SIGN_ID if you want to sign the app with your dev id
+
 set -euo pipefail
 
 cd "$(dirname "$0")"
@@ -34,8 +35,8 @@ else
     echo "Warning: resource bundle $RESOURCE_BUNDLE not found in $BUILD_DIR" >&2
 fi
 
-echo "==> Ad-hoc signing…"
-codesign --force --deep --sign - "$APP_BUNDLE"
+echo "==> Signing…"
+codesign --force --deep --sign "${SIGN_ID:--}" "$APP_BUNDLE"
 
 echo
 echo "Done. Run with:"
