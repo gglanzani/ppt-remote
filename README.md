@@ -14,7 +14,7 @@ PowerPoint is driven by AppleScript; cursor movement goes through `CGEvent`.
 
 ## Running the app
 
-An app is available under releases but you can build it with `./build.sh`
+An app is available under [releases](https://github.com/gglanzani/ppt-remote/releases/latest) but you can build it with `./build.sh`
 
 On first launch macOS may warn that the app is from an unidentified developer.
 
