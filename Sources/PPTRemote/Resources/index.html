@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>PPT Remote</title>
+<style>
+  :root { color-scheme: dark; }
+  *, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; }
+  html, body { height: 100%; margin: 0; font-family: -apple-system, system-ui, sans-serif; overflow: hidden; }
+  body {
+    display: flex;
+    flex-direction: column;
+    padding: calc(env(safe-area-inset-top) + 10px) 16px calc(env(safe-area-inset-bottom) + 16px);
+    gap: 10px;
+    background: #0b0b16;
+    background-image: radial-gradient(ellipse 90% 40% at 50% 0%, rgba(80,60,180,0.18) 0%, transparent 100%);
+  }
+
+  .status {
+    text-align: center;
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    min-height: 1.1em;
+    color: transparent;
+    transition: color 0.3s;
+  }
+  .status.ok  { color: #4ade80; }
+  .status.err { color: #f87171; }
+
+  .row { display: flex; gap: 10px; }
+
+  button {
+    flex: 1;
+    border: none;
+    border-radius: 18px;
+    color: #fff;
+    font-family: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-height: 72px;
+    transition: transform 0.07s ease, filter 0.07s ease;
+  }
+  button:active { transform: scale(0.94); filter: brightness(0.78); }
+
+  .icon { font-size: 1.45rem; line-height: 1; }
+  .lbl  { font-size: 0.68rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.7; }
+
+  .btn-show {
+    background: linear-gradient(150deg, #166534 0%, #14532d 100%);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.07) inset, 0 4px 20px rgba(21,128,61,0.3);
+    transition: transform 0.07s ease, filter 0.07s ease, background 0.35s ease, box-shadow 0.35s ease;
+  }
+  .btn-show.presenting {
+    background: linear-gradient(150deg, #991b1b 0%, #7f1d1d 100%);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.07) inset, 0 4px 20px rgba(185,28,28,0.3);
+  }
+  .btn-nav {
+    background: linear-gradient(150deg, #1c1e32 0%, #14162a 100%);
+    border: 1px solid rgba(255,255,255,0.06);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 4px 14px rgba(0,0,0,0.45);
+  }
+
+  .laser-row { display: flex; justify-content: center; }
+  .btn-laser {
+    flex: none;
+    width: 56%;
+    min-height: 44px;
+    border-radius: 22px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    flex-direction: row;
+    gap: 8px;
+    background: linear-gradient(150deg, #1c1e32 0%, #14162a 100%);
+    border: 1px solid rgba(255,255,255,0.07);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 4px 14px rgba(0,0,0,0.45);
+    transition: transform 0.07s ease, filter 0.07s ease, background 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
+  }
+  .btn-laser.on {
+    background: linear-gradient(150deg, #9f1239 0%, #881337 100%);
+    border-color: rgba(251,113,133,0.25);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.08) inset, 0 4px 28px rgba(159,18,57,0.5);
+  }
+  .dot {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: #444;
+    flex-shrink: 0;
+    transition: background 0.35s, box-shadow 0.35s;
+  }
+  .btn-laser.on .dot {
+    background: #fb7185;
+    box-shadow: 0 0 8px rgba(251,113,133,0.9);
+  }
+
+  .pad {
+    flex: 1;
+    background: linear-gradient(160deg, #0e0e1c 0%, #0b0b16 100%);
+    border: 1.5px dashed rgba(255,255,255,0.09);
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    touch-action: none;
+    transition: border-color 0.35s, background 0.35s;
+    color: #3a3a50;
+  }
+  .pad.on {
+    border-color: rgba(251,113,133,0.3);
+    background: linear-gradient(160deg, #160810 0%, #100610 100%);
+    color: rgba(251,113,133,0.5);
+  }
+  .pad-icon  { font-size: 2rem; }
+  .pad-label { font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; }
+</style>
+</head>
+<body>
+
+<div class="status" id="status"></div>
+
+<div class="row">
+  <button class="btn-show" id="showBtn">
+    <span class="icon" id="showIcon">▶</span>
+    <span class="lbl" id="showLabel">Start Show</span>
+  </button>
+</div>
+
+<div class="row">
+  <button class="btn-nav" data-action="prev">
+    <span class="icon">◀</span>
+    <span class="lbl">Prev</span>
+  </button>
+  <button class="btn-nav" data-action="next">
+    <span class="icon">▶</span>
+    <span class="lbl">Next</span>
+  </button>
+</div>
+
+<div class="laser-row">
+  <button class="btn-laser" id="laserBtn">
+    <span class="dot"></span>
+    <span id="laserLabel">Laser Off</span>
+  </button>
+</div>
+
+<div class="pad" id="pad">
+  <span class="pad-icon">⊹</span>
+  <span class="pad-label">Drag to move pointer</span>
+</div>
+
+<script>
+const base = '/' + location.pathname.split('/').filter(Boolean)[0];
+const statusEl = document.getElementById('status');
+let statusTimer = null;
+
+// WebSocket — same host/port, upgrade path /<token>/ws
+const wsProto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+let ws = null, wsReady = false;
+
+function connectWS() {
+  ws = new WebSocket(wsProto + '//' + location.host + base + '/ws');
+  ws.onopen  = () => { wsReady = true; };
+  ws.onclose = ws.onerror = () => { wsReady = false; setTimeout(connectWS, 2000); };
+  ws.onmessage = (e) => {
+    try { showFeedback(JSON.parse(e.data)); } catch (_) {}
+  };
+}
+connectWS();
+
+function showFeedback(j) {
+  clearTimeout(statusTimer);
+  if (j.ok) {
+    statusEl.className = 'status ok';
+    statusEl.textContent = '✓';
+    statusTimer = setTimeout(() => { statusEl.className = 'status'; statusEl.textContent = ''; }, 1200);
+  } else {
+    statusEl.className = 'status err';
+    statusEl.textContent = j.message || j.error || 'error';
+  }
+}
+
+async function send(action) {
+  clearTimeout(statusTimer);
+  statusEl.className = 'status';
+  statusEl.textContent = '';
+  if (wsReady) { ws.send(JSON.stringify({ action })); return; }
+  try {
+    const r = await fetch(base + '/api/' + action, { method: 'POST' });
+    showFeedback(await r.json());
+  } catch (e) {
+    statusEl.className = 'status err';
+    statusEl.textContent = e.message;
+  }
+}
+
+document.querySelectorAll('button[data-action]').forEach(b =>
+  b.addEventListener('click', () => send(b.dataset.action))
+);
+
+const showBtn = document.getElementById('showBtn');
+const showIcon = document.getElementById('showIcon');
+const showLabel = document.getElementById('showLabel');
+let presenting = false;
+
+showBtn.addEventListener('click', async () => {
+  const action = presenting ? 'end' : 'start';
+  presenting = !presenting;
+  showBtn.classList.toggle('presenting', presenting);
+  showIcon.textContent = presenting ? '■' : '▶';
+  showLabel.textContent = presenting ? 'End Show' : 'Start Show';
+  await send(action);
+});
+
+const laserBtn = document.getElementById('laserBtn');
+const laserLabel = document.getElementById('laserLabel');
+const pad = document.getElementById('pad');
+let laserOn = false;
+
+laserBtn.addEventListener('click', () => {
+  laserOn = !laserOn;
+  laserBtn.classList.toggle('on', laserOn);
+  pad.classList.toggle('on', laserOn);
+  laserLabel.textContent = laserOn ? 'Laser On' : 'Laser Off';
+  send('laser');
+});
+
+// Cursor movement — fire-and-forget over WS, batched HTTP fallback
+const SENS = 2.5;
+let last = null, pending = null, inflight = false;
+
+function flush() {
+  if (!pending) return;
+  if (wsReady) {
+    const body = pending; pending = null;
+    ws.send(JSON.stringify({ action: 'move', ...body }));
+    return;
+  }
+  if (inflight) return;
+  const body = pending; pending = null; inflight = true;
+  fetch(base + '/api/move', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  }).catch(() => {}).finally(() => { inflight = false; if (pending) flush(); });
+}
+
+function onTouch(e) {
+  e.preventDefault();
+  const t = e.touches[0];
+  if (e.type === 'touchstart' && t) { last = { x: t.clientX, y: t.clientY }; return; }
+  if (e.type === 'touchmove' && t && last) {
+    const dx = (t.clientX - last.x) * SENS;
+    const dy = (t.clientY - last.y) * SENS;
+    last = { x: t.clientX, y: t.clientY };
+    pending ? (pending.dx += dx, pending.dy += dy) : (pending = { dx, dy });
+    flush(); return;
+  }
+  if (e.type === 'touchend' || e.type === 'touchcancel') last = null;
+}
+
+['touchstart','touchmove','touchend','touchcancel'].forEach(ev =>
+  pad.addEventListener(ev, onTouch, { passive: false })
+);
+</script>
+</body>
+</html>
