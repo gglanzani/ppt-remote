@@ -26,6 +26,7 @@ mkdir -p "$APP_BUNDLE/Contents/Resources"
 
 cp "$BUILD_DIR/$EXEC_NAME" "$APP_BUNDLE/Contents/MacOS/$EXEC_NAME"
 cp Info.plist "$APP_BUNDLE/Contents/Info.plist"
+cp AppIcon.icns "$APP_BUNDLE/Contents/Resources/AppIcon.icns"
 
 # SwiftPM emits resources into a <Package>_<Target>.bundle directory.
 RESOURCE_BUNDLE="${EXEC_NAME}_${EXEC_NAME}.bundle"
