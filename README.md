@@ -1,3 +1,5 @@
+![](AppIcon.svg)
+
 # PPT Remote
 
 Turn your iPhone into a PowerPoint remote. A macOS menu-bar app serves a control page over Wi-Fi — open it on your phone and you get slide navigation, a laser pointer toggle, and a touch pad that moves the Mac cursor.

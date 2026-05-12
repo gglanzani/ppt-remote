@@ -1,5 +1,4 @@
 import AppKit
-import CoreImage
 import Darwin
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -12,7 +11,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var server: HTTPServer?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        setupAppIcon()
         requestAccessibilityIfNeeded()
         setupMenuBar()
         startServer()
@@ -32,99 +30,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             if alert.runModal() == .alertFirstButtonReturn {
                 NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!)
             }
-        }
-    }
-
-    private func setupAppIcon() {
-        let s: CGFloat = 512
-        let icon = NSImage(size: NSSize(width: s, height: s), flipped: false) { _ in
-            guard let ctx = NSGraphicsContext.current?.cgContext else { return false }
-            let rgb = CGColorSpaceCreateDeviceRGB()
-
-            // Clip to macOS squircle
-            let squircle = CGPath(roundedRect: CGRect(x: 0, y: 0, width: s, height: s),
-                                  cornerWidth: s * 0.2237, cornerHeight: s * 0.2237, transform: nil)
-            ctx.addPath(squircle); ctx.clip()
-
-            // Background gradient: vivid royal blue → teal
-            let bg = CGGradient(colorsSpace: rgb, colors: [
-                CGColor(red: 0.08, green: 0.15, blue: 0.72, alpha: 1),
-                CGColor(red: 0.00, green: 0.52, blue: 0.62, alpha: 1),
-            ] as CFArray, locations: nil)!
-            ctx.drawLinearGradient(bg, start: CGPoint(x: 0, y: s),
-                                   end: CGPoint(x: s, y: 0), options: [])
-
-            // Subtle top sheen
-            let sheen = CGGradient(colorsSpace: rgb, colors: [
-                CGColor(red: 1, green: 1, blue: 1, alpha: 0.16),
-                CGColor(red: 1, green: 1, blue: 1, alpha: 0.00),
-            ] as CFArray, locations: nil)!
-            ctx.drawLinearGradient(sheen, start: CGPoint(x: s / 2, y: s),
-                                   end: CGPoint(x: s / 2, y: s * 0.50), options: [])
-
-            // 16:9 slide shape, centred and slightly raised
-            let sw = s * 0.62, sh = sw * 9 / 16
-            let sx = (s - sw) / 2, sy = (s - sh) / 2 + s * 0.015
-            let slideRect = CGRect(x: sx, y: sy, width: sw, height: sh)
-            let slideR = s * 0.025
-            let slidePath = CGPath(roundedRect: slideRect, cornerWidth: slideR,
-                                   cornerHeight: slideR, transform: nil)
-
-            ctx.addPath(slidePath)
-            ctx.setFillColor(CGColor(red: 1, green: 1, blue: 1, alpha: 0.20))
-            ctx.fillPath()
-
-            ctx.addPath(slidePath)
-            ctx.setStrokeColor(CGColor(red: 1, green: 1, blue: 1, alpha: 0.60))
-            ctx.setLineWidth(s * 0.008)
-            ctx.strokePath()
-
-            // Content lines inside slide (left side, y increases upward)
-            ctx.setStrokeColor(CGColor(red: 1, green: 1, blue: 1, alpha: 0.38))
-            ctx.setLineWidth(s * 0.018)
-            ctx.setLineCap(.round)
-            let lx = sx + sw * 0.10
-            let titleY = sy + sh * 0.72, body1Y = sy + sh * 0.52, body2Y = sy + sh * 0.34
-            ctx.move(to: CGPoint(x: lx, y: titleY)); ctx.addLine(to: CGPoint(x: lx + sw * 0.50, y: titleY)); ctx.strokePath()
-            ctx.move(to: CGPoint(x: lx, y: body1Y)); ctx.addLine(to: CGPoint(x: lx + sw * 0.40, y: body1Y)); ctx.strokePath()
-            ctx.move(to: CGPoint(x: lx, y: body2Y)); ctx.addLine(to: CGPoint(x: lx + sw * 0.32, y: body2Y)); ctx.strokePath()
-
-            // Red laser dot — right side of the slide
-            let dotX = sx + sw * 0.76, dotY = sy + sh * 0.52
-            let dotR = s * 0.062
-
-            // Outer glow
-            let outerGlow = CGGradient(colorsSpace: rgb, colors: [
-                CGColor(red: 1.0, green: 0.15, blue: 0.20, alpha: 0.40),
-                CGColor(red: 1.0, green: 0.15, blue: 0.20, alpha: 0.00),
-            ] as CFArray, locations: nil)!
-            ctx.drawRadialGradient(outerGlow, startCenter: CGPoint(x: dotX, y: dotY), startRadius: 0,
-                                   endCenter: CGPoint(x: dotX, y: dotY), endRadius: dotR * 4.0, options: [])
-
-            // Inner glow
-            let glow = CGGradient(colorsSpace: rgb, colors: [
-                CGColor(red: 1.0, green: 0.15, blue: 0.20, alpha: 0.85),
-                CGColor(red: 1.0, green: 0.10, blue: 0.15, alpha: 0.00),
-            ] as CFArray, locations: nil)!
-            ctx.drawRadialGradient(glow, startCenter: CGPoint(x: dotX, y: dotY), startRadius: 0,
-                                   endCenter: CGPoint(x: dotX, y: dotY), endRadius: dotR * 2.2, options: [])
-
-            // Dot core
-            ctx.addEllipse(in: CGRect(x: dotX - dotR, y: dotY - dotR, width: dotR * 2, height: dotR * 2))
-            ctx.setFillColor(CGColor(red: 1.0, green: 0.12, blue: 0.18, alpha: 1))
-            ctx.fillPath()
-
-            // Specular highlight on dot
-            let hiW = dotR * 0.78, hiH = dotR * 0.50
-            ctx.addEllipse(in: CGRect(x: dotX - hiW * 0.40, y: dotY + dotR * 0.12, width: hiW, height: hiH))
-            ctx.setFillColor(CGColor(red: 1, green: 1, blue: 1, alpha: 0.60))
-            ctx.fillPath()
-
-            return true
-        }
-        NSApp.applicationIconImage = icon
-        if let path = Bundle.main.bundlePath as String? {
-            NSWorkspace.shared.setIcon(icon, forFile: path, options: [])
         }
     }
 
