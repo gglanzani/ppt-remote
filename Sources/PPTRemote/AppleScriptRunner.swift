@@ -2,7 +2,7 @@ import Foundation
 
 final class AppleScriptRunner {
     func run(named name: String) -> (ok: Bool, message: String) {
-        guard let url = Bundle.module.url(
+        guard let url = ResourceBundle.url(
             forResource: name,
             withExtension: "applescript",
             subdirectory: "Scripts"

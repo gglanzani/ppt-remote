@@ -13,6 +13,7 @@ PowerPoint is driven by AppleScript; cursor movement goes through `CGEvent`.
 - Start/End Show, Prev/Next slide buttons
 - Laser pointer toggle + full-screen drag pad to move the cursor
 - WebSocket for low-latency cursor movement; falls back to HTTP automatically
+- Keeps the phone screen from auto-locking while the controller page is open
 
 ## Running the app
 

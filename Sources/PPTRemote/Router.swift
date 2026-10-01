@@ -52,9 +52,10 @@ final class Router {
     }
 
     private func serveIndex() -> HTTPResponse {
-        guard let url = Bundle.module.url(forResource: "index", withExtension: "html"),
+        guard let url = ResourceBundle.url(forResource: "index", withExtension: "html"),
               let data = try? Data(contentsOf: url) else {
-            return .notFound()
+            return HTTPResponse(status: 500, headers: ["Content-Type": "text/plain"],
+                                body: Data("PPT Remote: controller page missing from app bundle".utf8))
         }
         return HTTPResponse.ok(data, contentType: "text/html; charset=utf-8")
     }
